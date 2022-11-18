@@ -34,8 +34,8 @@
 #ifdef USE_DSYEVH3
 	#include "dsyevh3/dsyevh3.h"
 #else
-	#include <Eigen/Core>
-	#include <Eigen/Dense>
+	#include <eigen3/Eigen/Core>
+	#include <eigen3/Eigen/Dense>
 #endif
 
 #include <cmath>

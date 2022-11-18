@@ -5,7 +5,7 @@
 #include "opencv2/opencv.hpp"
 #include <string>
 #include <fstream>
-#include <Eigen/Eigen>
+#include <eigen3/Eigen/Eigen>
 #include "AHCPlaneFitter.hpp"
 #include "mrf.h"
 #include "GCoptimization.h"
