@@ -68,7 +68,7 @@ PlaneDetection::~PlaneDetection()
 
 bool PlaneDetection::readColorImage(string filename)
 {
-	color_img_ = cv::imread(filename, CV_LOAD_IMAGE_COLOR);
+	color_img_ = cv::imread(filename, cv::IMREAD_COLOR);
 	if (color_img_.empty() || color_img_.depth() != CV_8U)
 	{
 		cout << "ERROR: cannot read color image. No such a file, or the image format is not 8UC3" << endl;
@@ -79,7 +79,7 @@ bool PlaneDetection::readColorImage(string filename)
 
 bool PlaneDetection::readDepthImage(string filename)
 {
-	cv::Mat depth_img = cv::imread(filename, CV_LOAD_IMAGE_ANYDEPTH);
+	cv::Mat depth_img = cv::imread(filename, cv::IMREAD_ANYDEPTH);
 	if (depth_img.empty() || depth_img.depth() != CV_16U)
 	{
 		cout << "WARNING: cannot read depth image. No such a file, or the image format is not 16UC1" << endl;
