@@ -28,6 +28,13 @@ const double kCx = 320;
 const double kCy = 240;
 const int kDepthWidth = 640;
 const int kDepthHeight = 480;
+// kFx above represents the focal length in pixels along the x-axis.
+// kFx = 583;
+// kCx = 320;
+// fov = 2 * Math.atan(kCx / kFx) / Math.PI * 180
+// fov = 57.5
+
+// kFx = kCx / Math.tan(fov / 2 / 180 * Math.PI)
 
 #if defined(__linux__) || defined(__APPLE__)
 #define _isnan(x) isnan(x)
