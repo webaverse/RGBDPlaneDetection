@@ -1,9 +1,9 @@
 #include "plane_detection.h"
 
-PlaneDetection plane_detection;
+// PlaneDetection plane_detection;
 
 //-----------------------------------------------------------------
-// MRF energy functions
+/* // MRF energy functions
 MRF::CostVal dCost(int pix, int label)
 {
 	return plane_detection.dCost(pix, label);
@@ -58,7 +58,7 @@ void runMRFOptimization()
 	delete energy;
 	delete smooth;
 	delete data;
-}
+} */
 //-----------------------------------------------------------------
 
 
@@ -70,28 +70,74 @@ void printUsage()
 
 int main(int argc, char** argv)
 {
-	if (argc != 4 && argc != 5)
+	if (argc != 2)
 	{
 		printUsage();
 		return -1;
 	}
-	bool run_mrf = string(argv[1]) == "-o" ? true : false;
-	string color_filename = run_mrf ? string(argv[2]) : string(argv[1]);
-	string depth_filename = run_mrf ? string(argv[3]) : string(argv[2]);
-	string output_folder = run_mrf ? string(argv[4]) : string(argv[3]);
-	
-	plane_detection.readDepthImage(depth_filename);
-	plane_detection.readColorImage(color_filename);
-	plane_detection.runPlaneDetection();
 
-	if (run_mrf)
+  // open ifstream with "/dev/stdin" in binary mode
+	std::ifstream ifs("/dev/stdin", std::ios::binary);
+
+	// bool run_mrf = string(argv[1]) == "-o" ? true : false;
+	// string color_filename = run_mrf ? string(argv[2]) : string(argv[1]);
+	// string depth_filename = run_mrf ? string(argv[3]) : string(argv[2]);
+	// string output_folder = run_mrf ? string(argv[4]) : string(argv[3]);
+	string output_folder = string(argv[1]);
+	
+	// read width, height from stdin
+	int width, height;
+	ifs.read(reinterpret_cast<char*>(&width), sizeof(width));
+	ifs.read(reinterpret_cast<char*>(&height), sizeof(height));
+
+	std::vector<ColorType> colors;
+	for (int i = 0; i < width * height; i++)
 	{
-		plane_detection.prepareForMRF();
-		runMRFOptimization();
+	  uint8_t r, g, b;
+		ifs.read(reinterpret_cast<char*>(&r), sizeof(r));
+		ifs.read(reinterpret_cast<char*>(&g), sizeof(g));
+		ifs.read(reinterpret_cast<char*>(&b), sizeof(b));
+		colors.push_back(std::array<uint8_t, 3>{
+			b,
+			g,
+			r
+		});
 	}
-	int pos = color_filename.find_last_of("/\\");
-	string frame_name = color_filename.substr(pos + 1);
-	frame_name = frame_name.substr(0, frame_name.length() - 10);
+	if (colors.size() != width * height) {
+		std::cerr << "Error: number of colors does not match width and height: " << width << " " << height << " " << colors.size() << std::endl;
+		return -1;
+	}
+
+	std::vector<float> depths;
+	float depth;
+	for (int i = 0; i < width * height; i++)
+	{
+		ifs.read(reinterpret_cast<char*>(&depth), sizeof(depth));
+		depths.push_back(-depth);
+	}
+
+  std::cout << "read 1 " << width << " " << height << std::endl;
+  PlaneDetection plane_detection(width, height);
+  std::cout << "read 2 " << colors.size() << std::endl;
+	plane_detection.readColorImage(colors);
+  std::cout << "read 3 " << depths.size() << std::endl;
+	plane_detection.readDepthImage(depths);
+	// plane_detection.readDepthImage(depth_filename);
+	// plane_detection.readColorImage(color_filename);
+  std::cout << "read 4" << std::endl;
+	plane_detection.runPlaneDetection();
+  std::cout << "read 5" << std::endl;
+
+	// if (run_mrf)
+	// {
+	// 	plane_detection.prepareForMRF();
+	// 	runMRFOptimization();
+	// }
+	// int pos = color_filename.find_last_of("/\\");
+	// string frame_name = color_filename.substr(pos + 1);
+	// frame_name = frame_name.substr(0, frame_name.length() - 10);
+	const bool run_mrf = false;
+	const string frame_name = "frame";
 	plane_detection.writeOutputFiles(output_folder, frame_name, run_mrf);
 	return 0;
 }
