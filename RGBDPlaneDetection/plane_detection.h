@@ -15,6 +15,7 @@ using namespace std;
 
 typedef Eigen::Vector3d VertexType;
 typedef Eigen::Vector2i PixelPos;
+typedef std::array<uint8_t, 3> ColorType;
 
 const int kNeighborRange = 5; // boundary pixels' neighbor range
 const int kScaleFactor = 5; // scale coordinate unit in mm
@@ -22,12 +23,12 @@ const float kInfVal = 1000000; // an infinite large value used in MRF optimizati
 
 // Camera intrinsic parameters.
 // All BundleFusion data uses the following parameters.
-const double kFx = 583;
-const double kFy = 583;
-const double kCx = 320;
-const double kCy = 240;
-const int kDepthWidth = 640;
-const int kDepthHeight = 480;
+// const double kFx = 583;
+// const double kFy = 583;
+// const double kCx = 320;
+// const double kCy = 240;
+// const int kDepthWidth = 640;
+// const int kDepthHeight = 480;
 // kFx above represents the focal length in pixels along the x-axis.
 // kFx = 583;
 // kCx = 320;
@@ -90,14 +91,16 @@ public:
 	unordered_map<int, int> extractedpid_to_pid; // extracted plane index -> plane index
 
 public:
-	PlaneDetection();
+	PlaneDetection(int w, int h);
 	~PlaneDetection();
 
 	//bool readIntrinsicParameterFile(string filename);
 
 	bool readColorImage(string filename);
+	bool readColorImage(std::vector<ColorType> &colors);
 
 	bool readDepthImage(string filename);
+	bool readDepthImage(std::vector<float> &depths);
 
 	bool runPlaneDetection();
 
@@ -113,7 +116,7 @@ public:
 	/* For MRF optimization */
 	inline MRF::CostVal dCost(int pix, int label)
 	{
-		return pixel_boundary_flags_[pix] ? 1 : (label == plane_filter.membershipImg.at<int>(pix / kDepthWidth, pix % kDepthWidth) ? 1 : kInfVal);
+		return pixel_boundary_flags_[pix] ? 1 : (label == plane_filter.membershipImg.at<int>(pix / cloud.w, pix % cloud.w) ? 1 : kInfVal);
 	}
 	inline MRF::CostVal fnCost(int pix1, int pix2, int i, int j)
 	{

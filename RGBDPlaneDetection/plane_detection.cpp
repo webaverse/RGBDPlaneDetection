@@ -2,11 +2,17 @@
 #include <stdint.h>
 #include <iomanip> // output double value precision
 
-PlaneDetection::PlaneDetection()
+//
+
+constexpr float scaleFactor = 1000.f; // scale is in mm
+
+//
+
+PlaneDetection::PlaneDetection(int w, int h)
 {
-	cloud.vertices.resize(kDepthHeight * kDepthWidth);
-	cloud.w = kDepthWidth;
-	cloud.h = kDepthHeight;
+	cloud.w = w;
+	cloud.h = h;
+	cloud.vertices.resize(cloud.h * cloud.w);
 }
 
 PlaneDetection::~PlaneDetection()
@@ -76,6 +82,18 @@ bool PlaneDetection::readColorImage(string filename)
 	}
 	return true;
 }
+bool PlaneDetection::readColorImage(std::vector<ColorType> &colors)
+{
+	// color_img_ = cv::imread(filename, cv::IMREAD_COLOR);
+	// if (color_img_.empty() || color_img_.depth() != CV_8U)
+	// {
+	// 	cout << "ERROR: cannot read color image. No such a file, or the image format is not 8UC3" << endl;
+	// 	return false;
+	// }
+	// note: OpenCV uses BGR
+	color_img_ = cv::Mat(cloud.h, cloud.w, CV_8UC3, colors.data());
+	return true;
+}
 
 bool PlaneDetection::readDepthImage(string filename)
 {
@@ -97,6 +115,45 @@ bool PlaneDetection::readDepthImage(string filename)
 				cloud.vertices[vertex_idx++] = VertexType(0, 0, z);
 				continue;
 			}
+			const float kFx = (double)cloud.w;
+			const float kFy = (double)cloud.h;
+			const float kCx = (double)cloud.w / 2.0;
+			const float kCy = (double)cloud.h / 2.0;
+
+			double x = ((double)j - kCx) * z / kFx;
+			double y = ((double)i - kCy) * z / kFy;
+			cloud.vertices[vertex_idx++] = VertexType(x, y, z);
+		}
+	}
+	return true;
+}
+bool PlaneDetection::readDepthImage(std::vector<float> &depths)
+{
+	// cv::Mat depth_img = cv::imread(filename, cv::IMREAD_ANYDEPTH);
+	// if (depth_img.empty() || depth_img.depth() != CV_16U)
+	// {
+	// 	cout << "WARNING: cannot read depth image. No such a file, or the image format is not 16UC1" << endl;
+	// 	return false;
+	// }
+	// int rows = depth_img.rows, cols = depth_img.cols;
+	int rows = cloud.h, cols = cloud.w;
+	int vertex_idx = 0;
+	for (int i = 0; i < rows; ++i)
+	{
+		for (int j = 0; j < cols; ++j)
+		{
+			// double z = (double)(depth_img.at<unsigned short>(i, j)) / kScaleFactor;
+			double z = (double)(depths[vertex_idx] * scaleFactor);
+			if (_isnan(z))
+			{
+				cloud.vertices[vertex_idx++] = VertexType(0, 0, z);
+				continue;
+			}
+			const float kFx = (double)cloud.w;
+			const float kFy = (double)cloud.h;
+			const float kCx = (double)cloud.w / 2.0;
+			const float kCy = (double)cloud.h / 2.0;
+
 			double x = ((double)j - kCx) * z / kFx;
 			double y = ((double)i - kCy) * z / kFy;
 			cloud.vertices[vertex_idx++] = VertexType(x, y, z);
@@ -107,14 +164,14 @@ bool PlaneDetection::readDepthImage(string filename)
 
 bool PlaneDetection::runPlaneDetection()
 {
-	seg_img_ = cv::Mat(kDepthHeight, kDepthWidth, CV_8UC3);
+	seg_img_ = cv::Mat(cloud.h, cloud.w, CV_8UC3);
 	plane_filter.run(&cloud, &plane_vertices_, &seg_img_);
 	plane_num_ = (int)plane_vertices_.size();
 
 	// Here we set the plane index of a pixel which does NOT belong to any plane as #planes.
 	// This is for using MRF optimization later.
-	for (int row = 0; row < kDepthHeight; ++row)
-		for (int col = 0; col < kDepthWidth; ++col)
+	for (int row = 0; row < cloud.h; ++row)
+		for (int col = 0; col < cloud.w; ++col)
 			if (plane_filter.membershipImg.at<int>(row, col) < 0)
 				plane_filter.membershipImg.at<int>(row, col) = plane_num_;
 	return true;
@@ -122,32 +179,32 @@ bool PlaneDetection::runPlaneDetection()
 
 void PlaneDetection::prepareForMRF()
 {
-	opt_seg_img_ = cv::Mat(kDepthHeight, kDepthWidth, CV_8UC3);
-	opt_membership_img_ = cv::Mat(kDepthHeight, kDepthWidth, CV_32SC1);
-	pixel_boundary_flags_.resize(kDepthWidth * kDepthHeight, false);
-	pixel_grayval_.resize(kDepthWidth * kDepthHeight, 0);
+	opt_seg_img_ = cv::Mat(cloud.h, cloud.w, CV_8UC3);
+	opt_membership_img_ = cv::Mat(cloud.h, cloud.w, CV_32SC1);
+	pixel_boundary_flags_.resize(cloud.w * cloud.h, false);
+	pixel_grayval_.resize(cloud.w * cloud.h, 0);
 
 	cv::Mat& mat_label = plane_filter.membershipImg;
-	for (int row = 0; row < kDepthHeight; ++row)
+	for (int row = 0; row < cloud.h; ++row)
 	{
-		for (int col = 0; col < kDepthWidth; ++col)
+		for (int col = 0; col < cloud.w; ++col)
 		{
-			pixel_grayval_[row * kDepthWidth + col] = RGB2Gray(row, col);
+			pixel_grayval_[row * cloud.w + col] = RGB2Gray(row, col);
 			int label = mat_label.at<int>(row, col);
 			if ((row - 1 >= 0 && mat_label.at<int>(row - 1, col) != label)
-				|| (row + 1 < kDepthHeight && mat_label.at<int>(row + 1, col) != label)
+				|| (row + 1 < cloud.h && mat_label.at<int>(row + 1, col) != label)
 				|| (col - 1 >= 0 && mat_label.at<int>(row, col - 1) != label)
-				|| (col + 1 < kDepthWidth && mat_label.at<int>(row, col + 1) != label))
+				|| (col + 1 < cloud.w && mat_label.at<int>(row, col + 1) != label))
 			{
 				// Pixels in a fixed range near the boundary pixel are also regarded as boundary pixels
-				for (int x = max(row - kNeighborRange, 0); x < min(kDepthHeight, row + kNeighborRange); ++x)
+				for (int x = max(row - kNeighborRange, 0); x < min(cloud.h, row + kNeighborRange); ++x)
 				{
-					for (int y = max(col - kNeighborRange, 0); y < min(kDepthWidth, col + kNeighborRange); ++y)
+					for (int y = max(col - kNeighborRange, 0); y < min(cloud.w, col + kNeighborRange); ++y)
 					{
 						// If a pixel is not on any plane, then it is not a boundary pixel.
 						if (mat_label.at<int>(x, y) == plane_num_)
 							continue;
-						pixel_boundary_flags_[x * kDepthWidth + y] = true;
+						pixel_boundary_flags_[x * cloud.w + y] = true;
 					}
 				}
 			}
@@ -157,7 +214,7 @@ void PlaneDetection::prepareForMRF()
 	for (int pidx = 0; pidx < plane_num_; ++pidx)
 	{
 		int vidx = plane_vertices_[pidx][0];
-		cv::Vec3b c = seg_img_.at<cv::Vec3b>(vidx / kDepthWidth, vidx % kDepthWidth);
+		cv::Vec3b c = seg_img_.at<cv::Vec3b>(vidx / cloud.w, vidx % cloud.w);
 		plane_colors_.push_back(c);
 	}
 	plane_colors_.push_back(cv::Vec3b(0,0,0)); // black for pixels not in any plane
@@ -191,9 +248,9 @@ void PlaneDetection::writePlaneLabelFile(string filename, bool run_mrf /* = fals
 		out.close();
 		return;
 	}
-	for (int row = 0; row < kDepthHeight; ++row)
+	for (int row = 0; row < cloud.h; ++row)
 	{
-		for (int col = 0; col < kDepthWidth; ++col)
+		for (int col = 0; col < cloud.w; ++col)
 		{
 			int label = run_mrf ? opt_membership_img_.at<int>(row, col) : plane_filter.membershipImg.at<int>(row, col);
 			out << label << " ";
@@ -219,7 +276,7 @@ void PlaneDetection::writePlaneDataFile(string filename, bool run_mrf /* = false
 
 		// Plane color in output image
 		int vidx = plane_vertices_[pidx][0];
-		cv::Vec3b c = seg_img_.at<cv::Vec3b>(vidx / kDepthWidth, vidx % kDepthWidth);
+		cv::Vec3b c = seg_img_.at<cv::Vec3b>(vidx / cloud.w, vidx % cloud.w);
 		out << int(c.val[2]) << " " << int(c.val[1]) << " "<< int(c.val[0]) << " "; // OpenCV uses BGR by default
 
 		// Plane normal and center
@@ -323,15 +380,15 @@ void PlaneDetection::computePlaneSumStats(bool run_mrf /* = false */)
 	{
 		opt_sum_stats_.resize(plane_num_);
 		opt_plane_pixel_nums_.resize(plane_num_, 0);
-		for (int row = 0; row < kDepthHeight; ++row)
+		for (int row = 0; row < cloud.h; ++row)
 		{
-			for (int col = 0; col < kDepthWidth; ++col)
+			for (int col = 0; col < cloud.w; ++col)
 			{
 				int label = opt_membership_img_.at<int>(row, col); // plane label each pixel belongs to
 				if (label != plane_num_) // pixel belongs to some plane
 				{
 					opt_plane_pixel_nums_[label]++;
-					int vidx = row * kDepthWidth + col;
+					int vidx = row * cloud.w + col;
 					const VertexType& v = cloud.vertices[vidx];
 					opt_sum_stats_[label].sx += v[0];		  opt_sum_stats_[label].sy += v[1];		    opt_sum_stats_[label].sz += v[2];
 					opt_sum_stats_[label].sxx += v[0] * v[0]; opt_sum_stats_[label].syy += v[1] * v[1]; opt_sum_stats_[label].szz += v[2] * v[2];
@@ -352,12 +409,14 @@ void PlaneDetection::computePlaneSumStats(bool run_mrf /* = false */)
 	// Only for debug. It doesn't influence the plane detection.
 	for (int pidx = 0; pidx < plane_num_; ++pidx)
 	{
+    auto &plane = plane_filter.extractedPlanes[pidx];
+
 		double w = 0;
 		//for (int j = 0; j < 3; ++j)
-		//	w -= plane_filter.extractedPlanes[pidx]->normal[j] * plane_filter.extractedPlanes[pidx]->center[j];
-		w -= plane_filter.extractedPlanes[pidx]->normal[0] * sum_stats_[pidx].sx;
-		w -= plane_filter.extractedPlanes[pidx]->normal[1] * sum_stats_[pidx].sy;
-		w -= plane_filter.extractedPlanes[pidx]->normal[2] * sum_stats_[pidx].sz;
+		//	w -= plane->normal[j] * plane->center[j];
+		w -= plane->normal[0] * sum_stats_[pidx].sx;
+		w -= plane->normal[1] * sum_stats_[pidx].sy;
+		w -= plane->normal[2] * sum_stats_[pidx].sz;
 		double sum = 0;
 		for (int i = 0; i < plane_vertices_[pidx].size(); ++i)
 		{
@@ -365,10 +424,18 @@ void PlaneDetection::computePlaneSumStats(bool run_mrf /* = false */)
 			const VertexType& v = cloud.vertices[vidx];
 			double dis = w;
 			for (int j = 0; j < 3; ++j)
-				dis += v[j] * plane_filter.extractedPlanes[pidx]->normal[j];
+				dis += v[j] * plane->normal[j];
+			dis /= scaleFactor;
 			sum += dis * dis;
 		}
 		sum /= plane_vertices_[pidx].size();
-		cout << "Distance for plane " << pidx << ": " << sum << endl;
+		cout << "Plane " << pidx <<
+		  " normal: " << plane->normal[0] << " " << plane->normal[1] << " " << plane->normal[2] <<
+			" center: " <<
+			  (plane->center[0] / scaleFactor) << " " <<
+				(plane->center[1] / scaleFactor) << " " <<
+				(-plane->center[2] / scaleFactor) << " " <<
+			" numVertices: " << plane_vertices_[pidx].size() << " " <<
+		  " distanceSquared: " << sum << endl;
 	}
 }
