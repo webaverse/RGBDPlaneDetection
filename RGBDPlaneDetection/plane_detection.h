@@ -91,7 +91,7 @@ public:
 	unordered_map<int, int> extractedpid_to_pid; // extracted plane index -> plane index
 
 public:
-	PlaneDetection(int w, int h);
+	PlaneDetection(int w, int h, int minSupport);
 	~PlaneDetection();
 
 	//bool readIntrinsicParameterFile(string filename);

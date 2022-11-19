@@ -8,11 +8,24 @@ constexpr float scaleFactor = 1000.f; // scale is in mm
 
 //
 
-PlaneDetection::PlaneDetection(int w, int h)
+PlaneDetection::PlaneDetection(int w, int h, int minSupport)
 {
 	cloud.w = w;
 	cloud.h = h;
 	cloud.vertices.resize(cloud.h * cloud.w);
+
+  // maxStep(100000), minSupport(3000),
+	// windowWidth(10), windowHeight(10),
+	// doRefine(true), erodeType(ERODE_ALL_BORDER),
+	// dirtyBlkMbship(true), drawCoarseBorder(false)
+	// plane_filter.maxStep = 1000000;
+	plane_filter.minSupport = minSupport;
+	plane_filter.windowWidth = 4;
+	plane_filter.windowHeight = 4;
+	// plane_filter.windowWidth = 8;
+	// plane_filter.windowHeight = 8;
+	// plane_filter.dirtyBlkMbship = false;
+	// plane_filter.erodeType = ahc::ERODE_NONE;
 }
 
 PlaneDetection::~PlaneDetection()
