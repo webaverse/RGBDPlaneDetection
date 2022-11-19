@@ -126,27 +126,25 @@ int main(int argc, char** argv)
 		depths.push_back(-depth);
 	}
 
-  std::cout << "read 1 " << width << " " << height << std::endl;
+  // std::cout << "read 1 " << width << " " << height << std::endl;
   PlaneDetection plane_detection(width, height, minSupport);
-  std::cout << "read 2 " << colors.size() << std::endl;
+  // std::cout << "read 2 " << colors.size() << std::endl;
 	plane_detection.readColorImage(colors);
-  std::cout << "read 3 " << depths.size() << std::endl;
+  // std::cout << "read 3 " << depths.size() << std::endl;
 	plane_detection.readDepthImage(depths);
-	// plane_detection.readDepthImage(depth_filename);
-	// plane_detection.readColorImage(color_filename);
-  std::cout << "read 4" << std::endl;
+  // std::cout << "read 4" << std::endl;
 	plane_detection.runPlaneDetection();
-  std::cout << "read 5" << std::endl;
+  // std::cout << "read 5" << std::endl;
 
 	// const bool run_mrf = argc >= 3;
 	const bool run_mrf = false;
 	if (run_mrf)
 	{
-    std::cout << "read 6" << std::endl;
+    // std::cout << "read 6" << std::endl;
 		plane_detection.prepareForMRF();
-    std::cout << "read 7" << std::endl;
+    // std::cout << "read 7" << std::endl;
 		runMRFOptimization(plane_detection);
-    std::cout << "read 8" << std::endl;
+    // std::cout << "read 8" << std::endl;
 	}
 	// int pos = color_filename.find_last_of("/\\");
 	// string frame_name = color_filename.substr(pos + 1);
