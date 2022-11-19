@@ -72,9 +72,10 @@ void printUsage()
 
 int main(int argc, char** argv)
 {
-	if (argc < 3)
+	if (argc != 2)
 	{
-		printUsage();
+		// printUsage();
+		std::cerr << "invalid number of arguments, expected 1, got " << (argc - 1) << std::endl;
 		return -1;
 	}
 
@@ -83,9 +84,9 @@ int main(int argc, char** argv)
 	// string color_filename = run_mrf ? string(argv[2]) : string(argv[1]);
 	// string depth_filename = run_mrf ? string(argv[3]) : string(argv[2]);
 	// string output_folder = run_mrf ? string(argv[4]) : string(argv[3]);
-	string output_folder = string(argv[1]);
+	// string output_folder = string(argv[1]);
 	// parse the minSupport int
-	int minSupport = atoi(argv[2]);
+	int minSupport = atoi(argv[1]);
 	// check if it was a number
 	if (minSupport <= 0) {
 		cout << "Error: minSupport must be a positive number" << endl;
@@ -149,6 +150,7 @@ int main(int argc, char** argv)
 	// int pos = color_filename.find_last_of("/\\");
 	// string frame_name = color_filename.substr(pos + 1);
 	// frame_name = frame_name.substr(0, frame_name.length() - 10);
+	const string output_folder = "output";
 	const string frame_name = "frame";
 	plane_detection.writeOutputFiles(output_folder, frame_name, run_mrf);
 	return 0;
