@@ -238,7 +238,7 @@ void PlaneDetection::writeOutputFiles(string output_folder, string frame_name, b
 {
 	computePlaneSumStats(run_mrf);
 
-	if (output_folder.back() != '\\' && output_folder.back() != '/')
+	/* if (output_folder.back() != '\\' && output_folder.back() != '/')
 		output_folder += "/";	
 	string filename_prefix = output_folder + frame_name + "-plane";
 	cv::imwrite(filename_prefix + ".png", seg_img_);
@@ -249,7 +249,7 @@ void PlaneDetection::writeOutputFiles(string output_folder, string frame_name, b
 		cv::imwrite(filename_prefix + "-opt.png", opt_seg_img_);
 		writePlaneLabelFile(filename_prefix + "-label-opt.txt", run_mrf);
 		writePlaneDataFile(filename_prefix + "-data-opt.txt", run_mrf);
-	}
+	} */
 	
 }
 void PlaneDetection::writePlaneLabelFile(string filename, bool run_mrf /* = false */)
@@ -420,6 +420,9 @@ void PlaneDetection::computePlaneSumStats(bool run_mrf /* = false */)
 
 	//--------------------------------------------------------------
 	// Only for debug. It doesn't influence the plane detection.
+	uint32_t numPlanes = plane_num_;
+  cout.write(reinterpret_cast<char*>(&numPlanes), sizeof(numPlanes));
+
 	std::vector<int> planeIndices(cloud.w * cloud.h);
 	for (int pidx = 0; pidx < plane_num_; ++pidx)
 	{
@@ -446,18 +449,38 @@ void PlaneDetection::computePlaneSumStats(bool run_mrf /* = false */)
 		}
 		sum /= plane_vertices_[pidx].size();
 
-		cout << "Plane " << pidx <<
-		  " normal: " << plane->normal[0] << " " << plane->normal[1] << " " << plane->normal[2] <<
-			" center: " <<
-			  (plane->center[0] / scaleFactor) << " " <<
-				(plane->center[1] / scaleFactor) << " " <<
-				(-plane->center[2] / scaleFactor) << " " <<
-			" numVertices: " << plane_vertices_[pidx].size() << " " <<
-		  " distanceSquared: " << sum << endl;
+    float normal[3] = {
+      (float)plane->normal[0],
+			(float)plane->normal[1],
+			(float)plane->normal[2]
+		};
+    cout.write(reinterpret_cast<char*>(normal), sizeof(normal));
+    float center[3] = {
+			(float)plane->center[0] / scaleFactor,
+			(float)plane->center[1] / scaleFactor,
+			(float)plane->center[2] / scaleFactor
+		};
+    cout.write(reinterpret_cast<char*>(center), sizeof(center));
+		uint32_t numVertices = plane_vertices_[pidx].size();
+		cout.write(reinterpret_cast<char*>(&numVertices), sizeof(numVertices));
+		float distanceSquaredF = (float)sum;
+		cout.write(reinterpret_cast<char*>(&distanceSquaredF), sizeof(distanceSquaredF));
+		
+		// cout << "Plane " << pidx <<
+		//   " normal: " << plane->normal[0] << " " << plane->normal[1] << " " << plane->normal[2] <<
+		// 	" center: " <<
+		// 	  (plane->center[0] / scaleFactor) << " " <<
+		// 		(plane->center[1] / scaleFactor) << " " <<
+		// 		(-plane->center[2] / scaleFactor) << " " <<
+		// 	" numVertices: " << plane_vertices_[pidx].size() << " " <<
+		//   " distanceSquared: " << sum << endl;
 	}
-	std::cout << "Plane indices: " << planeIndices.size() << std::endl;
-	for (int i = 0; i < 32; i++) {
-		std::cout << planeIndices[i] << " ";
-	}
-	std::cout << std::endl;
+
+	// std::cout << "Plane indices: " << planeIndices.size() << std::endl;
+	// for (int i = 0; i < 32; i++) {
+	// 	std::cout << planeIndices[i] << " ";
+	// }
+	// std::cout << std::endl;
+
+  cout.write(reinterpret_cast<char*>(planeIndices.data()), planeIndices.size() * sizeof(planeIndices[0]));
 }
