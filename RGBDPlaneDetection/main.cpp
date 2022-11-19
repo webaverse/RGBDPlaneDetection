@@ -101,7 +101,7 @@ int main(int argc, char** argv)
 	ifs.read(reinterpret_cast<char*>(&width), sizeof(width));
 	ifs.read(reinterpret_cast<char*>(&height), sizeof(height));
 
-	std::vector<ColorType> colors;
+	/* std::vector<ColorType> colors;
 	for (int i = 0; i < width * height; i++)
 	{
 	  uint8_t r, g, b;
@@ -117,7 +117,7 @@ int main(int argc, char** argv)
 	if (colors.size() != width * height) {
 		std::cerr << "Error: number of colors does not match width and height: " << width << " " << height << " " << colors.size() << std::endl;
 		return -1;
-	}
+	} */
 
 	std::vector<float> depths;
 	float depth;
