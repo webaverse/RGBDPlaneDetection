@@ -1,25 +1,27 @@
 #include "plane_detection.h"
 
-// PlaneDetection plane_detection;
+PlaneDetection *plane_detection_ptr = nullptr;
 
 //-----------------------------------------------------------------
-/* // MRF energy functions
+// MRF energy functions
 MRF::CostVal dCost(int pix, int label)
 {
-	return plane_detection.dCost(pix, label);
+	return plane_detection_ptr->dCost(pix, label);
 }
 
 MRF::CostVal fnCost(int pix1, int pix2, int i, int j)
 {
-	return plane_detection.fnCost(pix1, pix2, i, j);
+	return plane_detection_ptr->fnCost(pix1, pix2, i, j);
 }
 
-void runMRFOptimization()
+void runMRFOptimization(PlaneDetection &plane_detection)
 {
+	plane_detection_ptr = &plane_detection;
+
 	DataCost *data = new DataCost(dCost);
 	SmoothnessCost *smooth = new SmoothnessCost(fnCost);
 	EnergyFunction *energy = new EnergyFunction(data, smooth);
-	int width = kDepthWidth, height = kDepthHeight;
+	int width = plane_detection.cloud.w, height = plane_detection.cloud.h;
 	MRF* mrf = new Expansion(width * height, plane_detection.plane_num_ + 1, energy);
 	// Set neighbors for the graph
 	for (int row = 0; row < height; row++)
@@ -58,7 +60,7 @@ void runMRFOptimization()
 	delete energy;
 	delete smooth;
 	delete data;
-} */
+}
 //-----------------------------------------------------------------
 
 
@@ -70,21 +72,29 @@ void printUsage()
 
 int main(int argc, char** argv)
 {
-	if (argc != 2)
+	if (argc < 3)
 	{
 		printUsage();
 		return -1;
 	}
 
-  // open ifstream with "/dev/stdin" in binary mode
-	std::ifstream ifs("/dev/stdin", std::ios::binary);
-
+  // parse arguments
 	// bool run_mrf = string(argv[1]) == "-o" ? true : false;
 	// string color_filename = run_mrf ? string(argv[2]) : string(argv[1]);
 	// string depth_filename = run_mrf ? string(argv[3]) : string(argv[2]);
 	// string output_folder = run_mrf ? string(argv[4]) : string(argv[3]);
 	string output_folder = string(argv[1]);
+	// parse the minSupport int
+	int minSupport = atoi(argv[2]);
+	// check if it was a number
+	if (minSupport <= 0) {
+		cout << "Error: minSupport must be a positive number" << endl;
+		return -1;
+	}	
 	
+  // open ifstream with "/dev/stdin" in binary mode
+	std::ifstream ifs("/dev/stdin", std::ios::binary);
+
 	// read width, height from stdin
 	int width, height;
 	ifs.read(reinterpret_cast<char*>(&width), sizeof(width));
@@ -117,7 +127,7 @@ int main(int argc, char** argv)
 	}
 
   std::cout << "read 1 " << width << " " << height << std::endl;
-  PlaneDetection plane_detection(width, height);
+  PlaneDetection plane_detection(width, height, minSupport);
   std::cout << "read 2 " << colors.size() << std::endl;
 	plane_detection.readColorImage(colors);
   std::cout << "read 3 " << depths.size() << std::endl;
@@ -128,15 +138,19 @@ int main(int argc, char** argv)
 	plane_detection.runPlaneDetection();
   std::cout << "read 5" << std::endl;
 
-	// if (run_mrf)
-	// {
-	// 	plane_detection.prepareForMRF();
-	// 	runMRFOptimization();
-	// }
+	// const bool run_mrf = argc >= 3;
+	const bool run_mrf = false;
+	if (run_mrf)
+	{
+    std::cout << "read 6" << std::endl;
+		plane_detection.prepareForMRF();
+    std::cout << "read 7" << std::endl;
+		runMRFOptimization(plane_detection);
+    std::cout << "read 8" << std::endl;
+	}
 	// int pos = color_filename.find_last_of("/\\");
 	// string frame_name = color_filename.substr(pos + 1);
 	// frame_name = frame_name.substr(0, frame_name.length() - 10);
-	const bool run_mrf = false;
 	const string frame_name = "frame";
 	plane_detection.writeOutputFiles(output_folder, frame_name, run_mrf);
 	return 0;
