@@ -241,10 +241,10 @@ namespace ahc {
 				timer.toctic("return time");
 #endif
 			}
-			if(verbose) {
-				std::cout<<"#step="<<step<<", #extractedPlanes="
-					<<this->extractedPlanes.size()<<std::endl;
-			}
+			// if(verbose) {
+			// 	std::cout<<"#step="<<step<<", #extractedPlanes="
+			// 		<<this->extractedPlanes.size()<<std::endl;
+			// }
 #ifdef EVAL_SPEED
 			return timer2.toc();
 #endif
