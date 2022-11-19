@@ -130,7 +130,7 @@ int main(int argc, char** argv)
   // std::cout << "read 1 " << width << " " << height << std::endl;
   PlaneDetection plane_detection(width, height, minSupport);
   // std::cout << "read 2 " << colors.size() << std::endl;
-	plane_detection.readColorImage(colors);
+	// plane_detection.readColorImage(colors);
   // std::cout << "read 3 " << depths.size() << std::endl;
 	plane_detection.readDepthImage(depths);
   // std::cout << "read 4" << std::endl;
