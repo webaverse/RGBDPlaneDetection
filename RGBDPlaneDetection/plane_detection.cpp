@@ -420,6 +420,7 @@ void PlaneDetection::computePlaneSumStats(bool run_mrf /* = false */)
 
 	//--------------------------------------------------------------
 	// Only for debug. It doesn't influence the plane detection.
+	std::vector<int> planeIndices(cloud.w * cloud.h);
 	for (int pidx = 0; pidx < plane_num_; ++pidx)
 	{
     auto &plane = plane_filter.extractedPlanes[pidx];
@@ -440,8 +441,11 @@ void PlaneDetection::computePlaneSumStats(bool run_mrf /* = false */)
 				dis += v[j] * plane->normal[j];
 			dis /= scaleFactor;
 			sum += dis * dis;
+
+			planeIndices[vidx] = pidx;
 		}
 		sum /= plane_vertices_[pidx].size();
+
 		cout << "Plane " << pidx <<
 		  " normal: " << plane->normal[0] << " " << plane->normal[1] << " " << plane->normal[2] <<
 			" center: " <<
@@ -451,4 +455,9 @@ void PlaneDetection::computePlaneSumStats(bool run_mrf /* = false */)
 			" numVertices: " << plane_vertices_[pidx].size() << " " <<
 		  " distanceSquared: " << sum << endl;
 	}
+	std::cout << "Plane indices: " << planeIndices.size() << std::endl;
+	for (int i = 0; i < 32; i++) {
+		std::cout << planeIndices[i] << " ";
+	}
+	std::cout << std::endl;
 }
