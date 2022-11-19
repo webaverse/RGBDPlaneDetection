@@ -90,7 +90,7 @@ bool PlaneDetection::readColorImage(string filename)
 	color_img_ = cv::imread(filename, cv::IMREAD_COLOR);
 	if (color_img_.empty() || color_img_.depth() != CV_8U)
 	{
-		cout << "ERROR: cannot read color image. No such a file, or the image format is not 8UC3" << endl;
+		cerr << "ERROR: cannot read color image. No such a file, or the image format is not 8UC3" << endl;
 		return false;
 	}
 	return true;
@@ -100,7 +100,7 @@ bool PlaneDetection::readColorImage(std::vector<ColorType> &colors)
 	// color_img_ = cv::imread(filename, cv::IMREAD_COLOR);
 	// if (color_img_.empty() || color_img_.depth() != CV_8U)
 	// {
-	// 	cout << "ERROR: cannot read color image. No such a file, or the image format is not 8UC3" << endl;
+	// 	cerr << "ERROR: cannot read color image. No such a file, or the image format is not 8UC3" << endl;
 	// 	return false;
 	// }
 	// note: OpenCV uses BGR
@@ -113,7 +113,7 @@ bool PlaneDetection::readDepthImage(string filename)
 	cv::Mat depth_img = cv::imread(filename, cv::IMREAD_ANYDEPTH);
 	if (depth_img.empty() || depth_img.depth() != CV_16U)
 	{
-		cout << "WARNING: cannot read depth image. No such a file, or the image format is not 16UC1" << endl;
+		cerr << "WARNING: cannot read depth image. No such a file, or the image format is not 16UC1" << endl;
 		return false;
 	}
 	int rows = depth_img.rows, cols = depth_img.cols;
@@ -145,7 +145,7 @@ bool PlaneDetection::readDepthImage(std::vector<float> &depths)
 	// cv::Mat depth_img = cv::imread(filename, cv::IMREAD_ANYDEPTH);
 	// if (depth_img.empty() || depth_img.depth() != CV_16U)
 	// {
-	// 	cout << "WARNING: cannot read depth image. No such a file, or the image format is not 16UC1" << endl;
+	// 	cerr << "WARNING: cannot read depth image. No such a file, or the image format is not 16UC1" << endl;
 	// 	return false;
 	// }
 	// int rows = depth_img.rows, cols = depth_img.cols;
@@ -328,7 +328,7 @@ void PlaneDetection::writePlaneDataFile(string filename, bool run_mrf /* = false
 		// NOTE: the plane-sum parameters computed from AHC code seems different from that computed from points belonging to planes shown above.
 		// Seems there is a plane refinement step in AHC code so points belonging to each plane are slightly changed.
 		//ahc::PlaneSeg::Stats& stat = plane_filter.extractedPlanes[pidx]->stats;
-		//cout << stat.sx << " " << stat.sy << " " << stat.sz << " " << stat.sxx << " "<< stat.syy << " "<< stat.szz << " "<< stat.sxy << " "<< stat.syz << " "<< stat.sxz << endl;
+		//cerr << stat.sx << " " << stat.sy << " " << stat.sz << " " << stat.sxx << " "<< stat.syy << " "<< stat.szz << " "<< stat.sxy << " "<< stat.syz << " "<< stat.sxz << endl;
 	}
 	out.close();
 }
@@ -384,7 +384,7 @@ void PlaneDetection::computePlaneSumStats(bool run_mrf /* = false */)
 		}
 		if (extractedpid_to_pid.find(min_idx) != extractedpid_to_pid.end())
 		{
-			cout << "   WARNING: a mapping already exists for extracted plane " << min_idx << ":" << extractedpid_to_pid[min_idx] << " -> " << min_idx << endl;
+			cerr << "   WARNING: a mapping already exists for extracted plane " << min_idx << ":" << extractedpid_to_pid[min_idx] << " -> " << min_idx << endl;
 		}
 		pid_to_extractedpid[i] = min_idx;
 		extractedpid_to_pid[min_idx] = i;
