@@ -450,15 +450,15 @@ void PlaneDetection::computePlaneSumStats(bool run_mrf /* = false */)
 		sum /= plane_vertices_[pidx].size();
 
     float normal[3] = {
-      (float)plane->normal[0],
+      (float)-plane->normal[0],
 			(float)plane->normal[1],
 			(float)plane->normal[2]
 		};
     cout.write(reinterpret_cast<char*>(normal), sizeof(normal));
     float center[3] = {
 			(float)plane->center[0] / scaleFactor,
-			(float)plane->center[1] / scaleFactor,
-			(float)plane->center[2] / scaleFactor
+			(float)-plane->center[1] / scaleFactor,
+			(float)-plane->center[2] / scaleFactor
 		};
     cout.write(reinterpret_cast<char*>(center), sizeof(center));
 		uint32_t numVertices = plane_vertices_[pidx].size();
