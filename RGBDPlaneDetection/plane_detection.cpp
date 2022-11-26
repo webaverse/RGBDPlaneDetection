@@ -423,7 +423,7 @@ void PlaneDetection::computePlaneSumStats(bool run_mrf /* = false */)
 	uint32_t numPlanes = plane_num_;
   cout.write(reinterpret_cast<char*>(&numPlanes), sizeof(numPlanes));
 
-	std::vector<int> planeIndices(cloud.w * cloud.h);
+	std::vector<int> planeIndices(cloud.w * cloud.h) = {-1};
 	for (int pidx = 0; pidx < plane_num_; ++pidx)
 	{
     auto &plane = plane_filter.extractedPlanes[pidx];
