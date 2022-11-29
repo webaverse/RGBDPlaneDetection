@@ -140,7 +140,7 @@ bool PlaneDetection::readDepthImage(string filename)
 	}
 	return true;
 }
-bool PlaneDetection::readDepthImage(std::vector<float> &depths)
+bool PlaneDetection::readDepthImage(std::vector<float> &depths, float kFx)
 {
 	// cv::Mat depth_img = cv::imread(filename, cv::IMREAD_ANYDEPTH);
 	// if (depth_img.empty() || depth_img.depth() != CV_16U)
@@ -162,8 +162,8 @@ bool PlaneDetection::readDepthImage(std::vector<float> &depths)
 				cloud.vertices[vertex_idx++] = VertexType(0, 0, z);
 				continue;
 			}
-			const float kFx = (double)cloud.w;
-			const float kFy = (double)cloud.h;
+			// const float kFx = (double)cloud.w;
+			const float kFy = kFx / cloud.w * cloud.h;
 			const float kCx = (double)cloud.w / 2.0;
 			const float kCy = (double)cloud.h / 2.0;
 

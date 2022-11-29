@@ -96,10 +96,12 @@ int main(int argc, char** argv)
   // open ifstream with "/dev/stdin" in binary mode
 	std::ifstream ifs("/dev/stdin", std::ios::binary);
 
-	// read width, height from stdin
+	// read from stdin
 	int width, height;
 	ifs.read(reinterpret_cast<char*>(&width), sizeof(width));
 	ifs.read(reinterpret_cast<char*>(&height), sizeof(height));
+	float kFx;
+	ifs.read(reinterpret_cast<char*>(&kFx), sizeof(kFx));
 
 	/* std::vector<ColorType> colors;
 	for (int i = 0; i < width * height; i++)
@@ -132,7 +134,7 @@ int main(int argc, char** argv)
   // std::cout << "read 2 " << colors.size() << std::endl;
 	// plane_detection.readColorImage(colors);
   // std::cout << "read 3 " << depths.size() << std::endl;
-	plane_detection.readDepthImage(depths);
+	plane_detection.readDepthImage(depths, kFx);
   // std::cout << "read 4" << std::endl;
 	plane_detection.runPlaneDetection();
   // std::cout << "read 5" << std::endl;

@@ -100,7 +100,7 @@ public:
 	bool readColorImage(std::vector<ColorType> &colors);
 
 	bool readDepthImage(string filename);
-	bool readDepthImage(std::vector<float> &depths);
+	bool readDepthImage(std::vector<float> &depths, float kFx);
 
 	bool runPlaneDetection();
 
